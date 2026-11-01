@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <title>Quiz Master - Tạo và làm trắc nghiệm</title>
+  <style>
+    :root {
+      --blue: #2563eb; --blue-dark: #1d4ed8; --green: #15803d;
+      --green-bg: #dcfce7; --red: #b91c1c; --red-bg: #fee2e2;
+      --ink: #172033; --muted: #64748b; --line: #e2e8f0;
+      --panel: #fff; --page: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--page); color: var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 900px; margin: 0 auto; padding: 22px 16px 48px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+    .brand { font-size:1.35rem; font-weight:800; letter-spacing:-.04em; }
+    .brand span { color:var(--blue); }
+    .sub { color:var(--muted); font-size:.9rem; margin-top:3px; }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .tab, .btn {
+      border:1px solid var(--line); border-radius:12px; padding:10px 14px;
+      background:#fff; color:var(--ink); font-weight:650;
+    }
+    .tab.active, .btn.primary { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .btn:hover, .tab:hover { filter:brightness(.97); }
+    .btn:disabled { opacity:.45; cursor:not-allowed; }
+    .panel {
+      background:var(--panel); border:1px solid var(--line); border-radius:18px;
+      padding:20px; box-shadow:0 5px 18px rgba(15,23,42,.04);
+    }
+    h1,h2,h3 { margin:0 0 12px; letter-spacing:-.025em; }
+    h1 { font-size:1.5rem; } h2 { font-size:1.2rem; }
+    p { line-height:1.55; }
+    .muted { color:var(--muted); }
+    .field { margin:14px 0; }
+    label { display:block; font-weight:650; margin-bottom:7px; }
+    input[type="text"], input[type="number"], textarea, select {
+      width:100%; border:1px solid #cbd5e1; border-radius:11px; padding:11px 12px;
+      background:#fff; color:var(--ink); outline:none;
+    }
+    textarea { min-height:88px; resize:vertical; }
+    input:focus, textarea:focus, select:focus { border-color:var(--blue); box-shadow:0 0 0 3px #dbeafe; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .option-row { display:grid; grid-template-columns:1fr auto; gap:9px; align-items:center; margin:9px 0; }
+    .correct-pick { display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:.9rem; }
+    .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
+    .question-card { border:1px solid var(--line); border-radius:14px; padding:14px; margin:12px 0; }
+    .question-card strong { display:block; margin-bottom:7px; }
+    .small-btn { border:0; background:#eff6ff; color:var(--blue-dark); padding:7px 10px; border-radius:9px; font-weight:650; }
+    .danger-btn { background:#fef2f2; color:var(--red); }
+    .hidden { display:none !important; }
+    .quiz-top { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .timer { font-weight:800; color:var(--blue-dark); background:#eff6ff; padding:8px 12px; border-radius:10px; }
+    .timer.warning { color:var(--red); background:var(--red-bg); }
+    .progress { height:8px; border-radius:99px; background:#e2e8f0; overflow:hidden; margin:14px 0 20px; }
+    .progress > div { height:100%; width:0; background:var(--blue); transition:width .2s; }
+    .question-image { display:block; max-width:100%; max-height:360px; object-fit:contain; margin:14px auto; border:1px solid var(--line); border-radius:12px; background:#f8fafc; }
+    .answers { display:grid; gap:10px; margin-top:18px; }
+    .answer {
+      text-align:left; padding:13px 14px; border:1px solid var(--line); border-radius:12px;
+      background:#fff; color:var(--ink); font-weight:600;
+    }
+    .answer:hover:not(:disabled) { border-color:var(--blue); background:#eff6ff; }
+    .answer.correct { border:2px solid var(--green); background:var(--green-bg); color:#14532d; }
+    .answer.wrong { border:2px solid var(--red); background:var(--red-bg); color:#7f1d1d; }
+    .feedback { margin-top:14px; padding:12px; border-radius:11px; font-weight:650; }
+    .feedback.good { background:var(--green-bg); color:#14532d; }
+    .feedback.bad { background:var(--red-bg); color:#7f1d1d; }
+    .score-big { font-size:2.3rem; font-weight:850; color:var(--blue); }
+    .result-row { padding:12px 0; border-bottom:1px solid var(--line); }
+    .result-row:last-child { border:0; }
+    .share-box { word-break:break-all; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:.88rem; }
+    footer { text-align:center; color:var(--muted); font-size:.82rem; margin-top:20px; }
+    @media (max-width:600px) {
+      .app { padding:16px 12px 36px; }
+      .panel { padding:16px; }
+      .grid { grid-template-columns:1fr; }
+      .tab { flex:1; padding:10px 8px; }
+      header { align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="brand">QUIZ <span>MASTER</span></div>
+      <div class="sub">Tạo câu hỏi · Luyện tập · Chia sẻ</div>
+    </div>
+    <button class="btn" id="resetAllBtn" title="Xóa dữ liệu trên thiết bị">Đặt lại</button>
+  </header>
+
+  <nav class="tabs" aria-label="Điều hướng">
+    <button class="tab active" data-tab="create">✏️ Tạo đề</button>
+    <button class="tab" data-tab="quiz">▶ Làm bài</button>
+    <button class="tab" data-tab="results">🏆 Kết quả</button>
+    <button class="tab" data-tab="share">🔗 Chia sẻ</button>
+  </nav>
+
+  <main>
+    <section id="create" class="panel">
+      <h1>Tạo bộ câu hỏi</h1>
+      <p class="muted">Nhập câu hỏi, 4 lựa chọn và đánh dấu đáp án đúng.</p>
+      <div class="field">
+        <label for="quizTitle">Tên bộ câu hỏi</label>
+        <input id="quizTitle" type="text" maxlength="90" placeholder="Ví dụ: Ôn tập Tin học">
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label for="timeLimit">Thời gian làm bài (phút)</label>
+          <input id="timeLimit" type="number" min="0" max="180" value="5">
+          <div class="muted" style="font-size:.8rem;margin-top:5px">Nhập 0 nếu không giới hạn thời gian.</div>
+        </div>
+        <div class="field">
+          <label for="questionCount">Số câu hiện có</label>
+          <input id="questionCount" type="text" value="0 câu" readonly>
+        </div>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+      <h2 id="editorHeading">Thêm câu hỏi</h2>
+      <div class="field">
+        <label for="questionText">Nội dung câu hỏi</label>
+        <textarea id="questionText" placeholder="Nhập câu hỏi tại đây..."></textarea>
+      </div>
+      <div class="field">
+        <label for="questionImage">Hình ảnh câu hỏi (không bắt buộc)</label>
+        <input id="questionImage" type="file" accept="image/*">
+        <div class="muted" style="font-size:.8rem;margin-top:5px">Chọn ảnh từ điện thoại hoặc máy tính. Nên dùng ảnh JPG, PNG hoặc WebP dưới 2 MB.</div>
+        <div id="imagePreviewWrap" class="hidden" style="margin-top:10px">
+          <img id="imagePreview" alt="Ảnh xem trước câu hỏi" style="display:block;max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:#f8fafc">
+          <button type="button" class="small-btn danger-btn" id="removeImageBtn" style="margin-top:8px">Xóa ảnh</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Các đáp án (chọn một đáp án đúng)</label>
+        <div id="optionInputs"></div>
+      </div>
+      <div class="field">
+        <label for="explanation">Giải thích (không bắt buộc)</label>
+        <textarea id="explanation" placeholder="Giải thích vì sao đáp án này đúng..."></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="saveQuestionBtn">＋ Thêm câu hỏi</button>
+        <button class="btn" id="cancelEditBtn" style="display:none">Hủy sửa</button>
+        <button class="btn" id="clearEditorBtn">Xóa nội dung</button>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+      <div class="quiz-top">
+        <h2>Danh sách câu hỏi</h2>
+        <button class="btn primary" id="startFromCreateBtn">Bắt đầu làm bài</button>
+      </div>
+      <div id="questionList"><p class="muted">Chưa có câu hỏi nào.</p></div>
+    </section>
+
+    <section id="quiz" class="panel hidden">
+      <div id="quizIntro">
+        <h1 id="introTitle">Sẵn sàng làm bài?</h1>
+        <p class="muted" id="introInfo">Bộ đề của bạn sẽ xuất hiện tại đây.</p>
+        <div class="actions">
+          <button class="btn primary" id="beginBtn">Bắt đầu</button>
+          <button class="btn" data-goto="create">Quay lại tạo đề</button>
+        </div>
+      </div>
+      <div id="quizPlay" class="hidden">
+        <div class="quiz-top">
+          <span class="muted" id="questionNumber">Câu 1/1</span>
+          <span class="timer" id="timer">05:00</span>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <h2 id="activeQuestion"></h2>
+        <div class="answers" id="answerButtons"></div>
+        <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+        <div class="actions">
+          <button class="btn primary" id="nextBtn" disabled>Câu tiếp theo →</button>
+          <button class="btn" id="quitBtn">Kết thúc bài</button>
+        </div>
+      </div>
+      <div id="quizFinished" class="hidden">
+        <h1>Đã hoàn thành!</h1>
+        <div class="score-big" id="finalScore">0/0</div>
+        <p id="finalMessage"></p>
+        <div class="actions">
+          <button class="btn primary" id="reviewBtn">Xem kết quả chi tiết</button>
+          <button class="btn" id="retryBtn">Làm lại</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="panel hidden">
+      <h1>Kết quả bài làm</h1>
+      <div id="resultContent"><p class="muted">Bạn chưa hoàn thành bài kiểm tra nào.</p></div>
+    </section>
+
+    <section id="share" class="panel hidden">
+      <h1>Chia sẻ bộ câu hỏi</h1>
+      <p class="muted">Tạo đường dẫn chứa bộ đề đã soạn. Người nhận chỉ cần mở đường dẫn và bấm Bắt đầu làm bài; họ không cần tạo câu hỏi hay đăng nhập.</p>
+      <div class="actions">
+        <button class="btn primary" id="makeShareBtn">Tạo đường dẫn chia sẻ</button>
+        <button class="btn" id="copyShareBtn" disabled>Sao chép đường dẫn</button>
+      </div>
+      <div id="shareOutput" class="share-box hidden" style="margin-top:14px"></div>
+      <p class="muted" style="font-size:.84rem">Lưu ý: đường dẫn chứa nội dung câu hỏi và đáp án. Không đưa thông tin cá nhân hoặc nội dung riêng tư vào bộ đề.</p>
+    </section>
+  </main>
+  <footer>Quiz Master · Dữ liệu được lưu trên thiết bị của bạn</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = "quizMaster_v1";
+  let questions = [];
+  let editingIndex = -1;
+  let current = 0;
+  let selected = null;
+  let score = 0;
+  let answersLog = [];
+  let secondsLeft = 0;
+  let timerId = null;
+  let lastResult = null;
+  let shareUrl = "";
+  let editorImage = "";
+  const DEFAULT_QUESTIONS = [{"text":"Which word means “the work of keeping a house clean and organised”?","options":["Housework","Homework","Teamwork","Exercise"],"correct":0,"explanation":"Housework means work done to keep a home clean and organised.","image":""},{"text":"My father is the ______ in my family. He earns most of the money.","options":["homemaker","breadwinner","cleaner","visitor"],"correct":1,"explanation":"A breadwinner is a person who earns money to support a family.","image":""},{"text":"We should ______ household chores fairly among family members.","options":["divide","invent","damage","perform"],"correct":0,"explanation":"Divide chores means share the housework.","image":""},{"text":"Doing housework together can strengthen family ______.","options":["bonds","pollution","concerts","footprints"],"correct":0,"explanation":"Family bonds are the relationships between family members.","image":""},{"text":"My mother usually ______ breakfast at 6 a.m.","options":["prepare","prepares","is preparing","prepared"],"correct":1,"explanation":"Use the present simple for habits; “my mother” takes -s.","image":""},{"text":"Be quiet! My younger sister ______ for her test.","options":["studies","study","is studying","studied"],"correct":2,"explanation":"Use the present continuous for an action happening now.","image":""},{"text":"______ you often help your parents with the housework?","options":["Are","Do","Does","Is"],"correct":1,"explanation":"Use “Do” with you in present simple questions.","image":""},{"text":"Look! Dad ______ the floor at the moment.","options":["cleans","clean","is cleaning","cleaned"],"correct":2,"explanation":"“At the moment” signals the present continuous.","image":""},{"text":"Lan ______ eating fast food because she wants to be healthy.","options":["doesn’t like","don’t like","isn’t like","not likes"],"correct":0,"explanation":"Use “doesn’t” + base verb with he/she/it or a singular name.","image":""},{"text":"We ______ with our grandparents this week while our house is repaired.","options":["stay","stays","are staying","stayed"],"correct":2,"explanation":"The present continuous can describe a temporary situation.","image":""},{"text":"My brother is always ______ his dirty clothes on the floor. It annoys me.","options":["leave","leaves","leaving","left"],"correct":2,"explanation":"“Be always + V-ing” can express annoyance about repeated behaviour.","image":""},{"text":"Which sentence is correct?","options":["She do the cooking every day.","She does the cooking every day.","She is do the cooking every day.","She doing the cooking every day."],"correct":1,"explanation":"The present simple with “she” uses “does”.","image":""},{"text":"A ______ lifestyle helps protect the environment.","options":["sustainable","harmful","wasteful","careless"],"correct":0,"explanation":"A sustainable lifestyle uses resources responsibly.","image":""},{"text":"A ______ is the total amount of greenhouse gases produced by a person or activity.","options":["carbon footprint","music festival","household chore","natural talent"],"correct":0,"explanation":"A carbon footprint measures greenhouse gas emissions.","image":""},{"text":"We should use ______ bags instead of single-use plastic bags.","options":["reusable","disposable","broken","polluted"],"correct":0,"explanation":"Reusable bags can be used many times.","image":""},{"text":"Turning off lights when you leave a room helps ______ energy.","options":["waste","save","pollute","produce"],"correct":1,"explanation":"Save energy means use less energy.","image":""},{"text":"Cutting down too many trees causes ______.","options":["deforestation","recycling","protection","celebration"],"correct":0,"explanation":"Deforestation is the removal of large areas of forest.","image":""},{"text":"Many wild animals are in danger of becoming extinct. They are ______ species.","options":["endangered","energetic","ordinary","domestic"],"correct":0,"explanation":"Endangered species are at risk of extinction.","image":""},{"text":"Please put your rubbish in the bin. Don’t ______.","options":["litter","recycle","reuse","reduce"],"correct":0,"explanation":"To litter means to leave rubbish in public places.","image":""},{"text":"Using buses, bicycles or walking can help reduce air ______.","options":["pollution","performance","housework","audience"],"correct":0,"explanation":"Air pollution is harmful substances in the air.","image":""},{"text":"Look at those dark clouds! It ______ rain.","options":["will","is going to","is","has"],"correct":1,"explanation":"Use “be going to” for a prediction based on present evidence.","image":""},{"text":"I think people ______ use more clean energy in the future.","options":["are","are going","will","did"],"correct":2,"explanation":"Use “will” for a general prediction or opinion about the future.","image":""},{"text":"We have bought some young trees. We ______ them this Sunday.","options":["plant","planted","are going to plant","will planting"],"correct":2,"explanation":"“Be going to” describes an intention or plan.","image":""},{"text":"“The phone is ringing.” “I ______ answer it.”","options":["am going to","will","was","have"],"correct":1,"explanation":"Use “will” for a decision made at the moment of speaking.","image":""},{"text":"Our class ______ a clean-up event next Saturday; we have already made a plan.","options":["is going to organise","organise","organised","organising"],"correct":0,"explanation":"A planned future activity can use “be going to”.","image":""},{"text":"Which sentence expresses a prediction based on evidence?","options":["I think it will be sunny one day.","Be careful! You are going to fall!","I will help you, I promise.","I believe she will win."],"correct":1,"explanation":"The warning is based on what the speaker can see now.","image":""},{"text":"If we recycle paper, we ______ fewer trees.","options":["save","saved","will save","are saving yesterday"],"correct":2,"explanation":"The first conditional uses present simple in the if-clause and “will” in the main clause.","image":""},{"text":"Choose the correct sentence.","options":["They going to plant trees.","They are going to plant trees.","They is going to plant trees.","They are go to plant trees."],"correct":1,"explanation":"The correct form is subject + am/is/are + going to + base verb.","image":""},{"text":"A person who writes music is a ______.","options":["composer","listener","dancer","reporter"],"correct":0,"explanation":"A composer writes music.","image":""},{"text":"The people who watch or listen to a show are the ______.","options":["audience","performers","judges","writers"],"correct":0,"explanation":"The audience watches or listens to a performance.","image":""},{"text":"The singer will ______ her new song next month.","options":["release","recycle","divide","protect"],"correct":0,"explanation":"Release a song means make it available to the public.","image":""},{"text":"Thousands of fans came to the music ______.","options":["festival","footprint","chores","forest"],"correct":0,"explanation":"A music festival is an event with musical performances.","image":""},{"text":"I like pop music, ______ my sister prefers classical music.","options":["and","but","so","because"],"correct":1,"explanation":"“But” joins two contrasting ideas.","image":""},{"text":"The concert was sold out, ______ we watched the live stream at home.","options":["because","but","so","although"],"correct":2,"explanation":"“So” introduces the result.","image":""},{"text":"Mai practises singing every day, ______ she wants to become a musician.","options":["or","because","but","yet"],"correct":1,"explanation":"“Because” gives the reason.","image":""},{"text":"You can listen to the song now, ______ you can download it later.","options":["or","but","so","because"],"correct":0,"explanation":"“Or” presents a choice.","image":""},{"text":"Read the passage: “Nam’s school is starting a Green Week. Students will collect paper and plastic for recycling. They are also going to plant trees in the school garden. Nam has decided to ride his bicycle to school to reduce air pollution.” What is the main purpose of Green Week?","options":["To help protect the environment","To prepare for a music show","To raise money for a new library","To teach students to cook"],"correct":0,"explanation":"The activities in the passage are all intended to protect the environment.","image":""},{"text":"According to the passage, what will students collect?","options":["Food and clothes","Paper and plastic","Books and toys","Glass and metal only"],"correct":1,"explanation":"The passage says students will collect paper and plastic.","image":""},{"text":"What are students going to do in the school garden?","options":["Build a music stage","Plant trees","Wash bicycles","Paint classrooms"],"correct":1,"explanation":"They are going to plant trees in the school garden.","image":""},{"text":"Why will Nam ride his bicycle to school?","options":["To arrive later","To reduce air pollution","To carry more books","To avoid Green Week"],"correct":1,"explanation":"Riding a bicycle can help reduce air pollution.","image":""}];
+
+  const escapeHTML = value => String(value).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[ch]);
+
+  function defaultOptions() {
+    $("optionInputs").innerHTML = [0,1,2,3].map(i => `
+      <div class="option-row">
+        <input type="text" class="option-input" maxlength="180" placeholder="Đáp án ${String.fromCharCode(65+i)}">
+        <label class="correct-pick"><input type="radio" name="correctOption" value="${i}" ${i===0?"checked":""}> Đúng</label>
+      </div>`).join("");
+  }
+
+  function saveLocal() {
+    const data = { title:$("quizTitle").value, timeLimit:Number($("timeLimit").value)||0, questions };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    catch (e) { alert("Không thể lưu dữ liệu trên thiết bị này."); }
+    updateCount();
+  }
+
+  function loadLocal() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (data && Array.isArray(data.questions) && data.questions.length) {
+        questions = data.questions;
+        $("quizTitle").value = data.title || "";
+        $("timeLimit").value = Number(data.timeLimit) >= 0 ? data.timeLimit : 30;
+      } else {
+        questions = DEFAULT_QUESTIONS.map(q => ({...q, options:[...q.options]}));
+        $("quizTitle").value = "Ôn tập Tiếng Anh 10 - Giữa học kì 1";
+        $("timeLimit").value = 30;
+        saveLocal();
+      }
+    } catch (e) {
+      questions = DEFAULT_QUESTIONS.map(q => ({...q, options:[...q.options]}));
+      $("quizTitle").value = "Ôn tập Tiếng Anh 10 - Giữa học kì 1";
+      $("timeLimit").value = 30;
+      saveLocal();
+    }
+    updateCount();
+    renderQuestionList();
+  }
+
+  function updateCount() { $("questionCount").value = `${questions.length} câu`; }
+
+  function clearEditor() {
+    $("questionText").value = "";
+    $("explanation").value = "";
+    editorImage = "";
+    $("questionImage").value = "";
+    $("imagePreview").src = "";
+    $("imagePreviewWrap").classList.add("hidden");
+    document.querySelectorAll(".option-input").forEach(input => input.value = "");
+    const first = document.querySelector('input[name="correctOption"][value="0"]');
+    if (first) first.checked = true;
+    editingIndex = -1;
+    $("editorHeading").textContent = "Thêm câu hỏi";
+    $("saveQuestionBtn").textContent = "＋ Thêm câu hỏi";
+    $("cancelEditBtn").style.display = "none";
+  }
+
+  function saveQuestion() {
+    const text = $("questionText").value.trim();
+    const options = [...document.querySelectorAll(".option-input")].map(input => input.value.trim());
+    const correct = Number(document.querySelector('input[name="correctOption"]:checked')?.value);
+    if (!text) return alert("Bạn hãy nhập nội dung câu hỏi.");
+    if (options.some(option => !option)) return alert("Hãy nhập đủ cả 4 đáp án.");
+    if (new Set(options.map(x => x.toLocaleLowerCase())).size !== 4) return alert("Các đáp án không được trùng nhau.");
+    const item = { text, options, correct, explanation:$("explanation").value.trim(), image:editorImage };
+    if (editingIndex >= 0) questions[editingIndex] = item;
+    else questions.push(item);
+    saveLocal();
+    renderQuestionList();
+    clearEditor();
+  }
+
+  function editQuestion(index) {
+    const q = questions[index];
+    editingIndex = index;
+    $("questionText").value = q.text;
+    $("explanation").value = q.explanation || "";
+    editorImage = q.image || "";
+    $("questionImage").value = "";
+    if (editorImage) {
+      $("imagePreview").src = editorImage;
+      $("imagePreviewWrap").classList.remove("hidden");
+    } else {
+      $("imagePreview").src = "";
+      $("imagePreviewWrap").classList.add("hidden");
+    }
+    document.querySelectorAll(".option-input").forEach((input,i) => input.value = q.options[i] || "");
+    const radio = document.querySelector(`input[name="correctOption"][value="${q.correct}"]`);
+    if (radio) radio.checked = true;
+    $("editorHeading").textContent = `Sửa câu hỏi ${index+1}`;
+    $("saveQuestionBtn").textContent = "Lưu thay đổi";
+    $("cancelEditBtn").style.display = "inline-block";
+    $("questionText").focus();
+  }
+
+  function renderQuestionList() {
+    updateCount();
+    if (!questions.length) {
+      $("questionList").innerHTML = '<p class="muted">Chưa có câu hỏi nào.</p>';
+      return;
+    }
+    $("questionList").innerHTML = questions.map((q,i) => `
+      <div class="question-card">
+        <strong>${i+1}. ${escapeHTML(q.text)}</strong>
+        ${q.image ? `<img class="question-image" style="max-height:150px;margin:10px 0" src="${q.image}" alt="Ảnh câu hỏi ${i+1}">` : ""}
+        <div class="muted" style="font-size:.9rem">Đáp án đúng: ${escapeHTML(q.options[q.correct])}</div>
+        <div class="actions">
+          <button class="small-btn" data-edit="${i}">Sửa</button>
+          <button class="small-btn danger-btn" data-delete="${i}">Xóa</button>
+        </div>
+      </div>`).join("");
+    $("questionList").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => editQuestion(Number(btn.dataset.edit))));
+    $("questionList").querySelectorAll("[data-delete]").forEach(btn => btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.delete);
+      if (confirm(`Xóa câu hỏi ${index+1}?`)) {
+        questions.splice(index,1); saveLocal(); renderQuestionList();
+        if (editingIndex === index) clearEditor();
+      }
+    }));
+  }
+
+  function showTab(name) {
+    document.querySelectorAll("main > section").forEach(section => section.classList.toggle("hidden", section.id !== name));
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === name));
+    if (name === "quiz") updateIntro();
+    if (name === "results") renderResults();
+    if (name === "share") $("shareOutput").classList.toggle("hidden", !shareUrl);
+  }
+
+  function updateIntro() {
+    $("introTitle").textContent = $("quizTitle").value.trim() || "Bài trắc nghiệm";
+    $("introInfo").textContent = `${questions.length} câu hỏi · ${Number($("timeLimit").value)||0 ? (Number($("timeLimit").value)+" phút") : "Không giới hạn thời gian"}`;
+  }
+
+  function startQuiz() {
+    if (!questions.length) { alert("Bạn cần tạo ít nhất một câu hỏi trước."); showTab("create"); return; }
+    clearInterval(timerId);
+    current = 0; selected = null; score = 0; answersLog = [];
+    $("quizIntro").classList.add("hidden");
+    $("quizFinished").classList.add("hidden");
+    $("quizPlay").classList.remove("hidden");
+    secondsLeft = Math.max(0, Number($("timeLimit").value)||0) * 60;
+    updateTimer();
+    if (secondsLeft > 0) timerId = setInterval(() => {
+      secondsLeft--;
+      updateTimer();
+      if (secondsLeft <= 0) finishQuiz(true);
+    }, 1000);
+    renderCurrentQuestion();
+  }
+
+  function updateTimer() {
+    const timer = $("timer");
+    timer.textContent = secondsLeft > 0
+      ? `${String(Math.floor(secondsLeft/60)).padStart(2,"0")}:${String(secondsLeft%60).padStart(2,"0")}`
+      : (Number($("timeLimit").value)||0 ? "00:00" : "Không giới hạn");
+    timer.classList.toggle("warning", secondsLeft > 0 && secondsLeft <= 30);
+  }
+
+  function renderCurrentQuestion() {
+    const q = questions[current];
+    selected = null;
+    $("questionNumber").textContent = `Câu ${current+1}/${questions.length}`;
+    $("progressBar").style.width = `${(current/questions.length)*100}%`;
+    $("activeQuestion").textContent = q.text;
+    const oldQuestionImage = $("activeQuestionImage");
+    if (oldQuestionImage) oldQuestionImage.remove();
+    if (q.image) {
+      const img = document.createElement("img");
+      img.id = "activeQuestionImage";
+      img.className = "question-image";
+      img.src = q.image;
+      img.alt = "Hình minh họa câu hỏi";
+      $("activeQuestion").insertAdjacentElement("afterend", img);
+    }
+    $("feedback").className = "feedback hidden";
+    $("feedback").textContent = "";
+    $("nextBtn").disabled = true;
+    $("nextBtn").textContent = current === questions.length-1 ? "Xem kết quả →" : "Câu tiếp theo →";
+    $("answerButtons").innerHTML = q.options.map((option,i) => `
+      <button class="answer" data-answer="${i}">${String.fromCharCode(65+i)}. ${escapeHTML(option)}</button>`).join("");
+    $("answerButtons").querySelectorAll("[data-answer]").forEach(btn => btn.addEventListener("click", () => chooseAnswer(Number(btn.dataset.answer))));
+  }
+
+  function chooseAnswer(index) {
+    if (selected !== null) return;
+    selected = index;
+    const q = questions[current];
+    const isCorrect = index === q.correct;
+    if (isCorrect) score++;
+    answersLog[current] = { selected:index, correct:q.correct, isCorrect };
+    $("answerButtons").querySelectorAll(".answer").forEach((btn,i) => {
+      btn.disabled = true;
+      if (i === q.correct) btn.classList.add("correct");
+      else if (i === index) btn.classList.add("wrong");
+    });
+    const feedback = $("feedback");
+    feedback.classList.remove("hidden");
+    feedback.classList.add(isCorrect ? "good" : "bad");
+    feedback.textContent = isCorrect
+      ? "✓ Chính xác! Bạn đã trả lời đúng."
+      : `✕ Chưa chính xác. Đáp án đúng: ${q.options[q.correct]}.`;
+    if (q.explanation) feedback.textContent += ` Giải thích: ${q.explanation}`;
+    $("nextBtn").disabled = false;
+  }
+
+  function nextQuestion() {
+    if (selected === null) return;
+    if (current < questions.length-1) { current++; renderCurrentQuestion(); }
+    else finishQuiz(false);
+  }
+
+  function finishQuiz(timeUp) {
+    clearInterval(timerId);
+    // Câu chưa trả lời khi hết giờ được tính là sai.
+    for (let i=0;i<questions.length;i++) {
+      if (!answersLog[i]) answersLog[i] = { selected:null, correct:questions[i].correct, isCorrect:false };
+    }
+    lastResult = {
+      title:$("quizTitle").value.trim() || "Bài trắc nghiệm",
+      score, total:questions.length, answers:answersLog.slice(),
+      timeUp, date:new Date().toLocaleString("vi-VN")
+    };
+    $("quizPlay").classList.add("hidden");
+    $("quizFinished").classList.remove("hidden");
+    $("finalScore").textContent = `${score}/${questions.length}`;
+    $("finalMessage").textContent = timeUp
+      ? "Đã hết thời gian. Các câu chưa trả lời được tính là sai."
+      : (score === questions.length ? "Xuất sắc! Bạn đã trả lời đúng tất cả." : `Bạn trả lời đúng ${score} trên ${questions.length} câu.`);
+    $("progressBar").style.width = "100%";
+    renderResults();
+  }
+
+  function renderResults() {
+    if (!lastResult) {
+      $("resultContent").innerHTML = '<p class="muted">Bạn chưa hoàn thành bài kiểm tra nào.</p>';
+      return;
+    }
+    const percent = Math.round(lastResult.score/lastResult.total*100);
+    $("resultContent").innerHTML = `
+      <div class="score-big">${lastResult.score}/${lastResult.total}</div>
+      <p><strong>${percent}% chính xác</strong> · ${escapeHTML(lastResult.title)}</p>
+      <p class="muted">${escapeHTML(lastResult.date)}${lastResult.timeUp?" · Hết giờ":""}</p>
+      <div class="progress"><div style="width:${percent}%"></div></div>
+      ${questions.map((q,i) => {
+        const a = lastResult.answers[i];
+        const correct = a && a.isCorrect;
+        return `<div class="result-row">
+          <strong>${i+1}. ${escapeHTML(q.text)}</strong>
+          ${q.image ? `<img class="question-image" style="max-height:180px;margin:10px 0" src="${q.image}" alt="Ảnh câu hỏi ${i+1}">` : ""}
+          <p style="margin:7px 0;color:${correct?"var(--green)":"var(--red)"};font-weight:650">
+            ${correct?"✓ Đúng":"✕ Sai hoặc chưa trả lời"}
+          </p>
+          <div class="muted">Bạn chọn: ${a && a.selected!==null ? escapeHTML(q.options[a.selected]) : "Chưa trả lời"}</div>
+          <div>Đáp án đúng: <strong>${escapeHTML(q.options[q.correct])}</strong></div>
+          ${q.explanation?`<div class="muted">Giải thích: ${escapeHTML(q.explanation)}</div>`:""}
+        </div>`;
+      }).join("")}`;
+  }
+
+  function encodeShare(data) {
+    const bytes = new TextEncoder().encode(JSON.stringify(data));
+    let binary = "";
+    bytes.forEach(byte => binary += String.fromCharCode(byte));
+    return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  }
+  function decodeShare(encoded) {
+    const base64 = encoded.replace(/-/g,"+").replace(/_/g,"/");
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  function makeShare() {
+    if (!questions.length) return alert("Bạn cần tạo ít nhất một câu hỏi trước khi chia sẻ.");
+    const data = { title:$("quizTitle").value.trim()||"Bộ câu hỏi", timeLimit:Number($("timeLimit").value)||0, questions };
+    const url = new URL(location.href);
+    url.hash = "quiz=" + encodeShare(data);
+    shareUrl = url.toString();
+    $("shareOutput").textContent = shareUrl;
+    $("shareOutput").classList.remove("hidden");
+    $("copyShareBtn").disabled = false;
+  }
+  async function copyShare() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Đã sao chép đường dẫn chia sẻ.");
+    } catch (e) {
+      const area = document.createElement("textarea");
+      area.value = shareUrl; document.body.appendChild(area); area.select();
+      document.execCommand("copy"); area.remove();
+      alert("Đã sao chép đường dẫn (nếu trình duyệt cho phép).");
+    }
+  }
+  function importSharedQuiz() {
+    if (!location.hash.startsWith("#quiz=")) return;
+    try {
+      const data = decodeShare(location.hash.slice(6));
+      if (!data || !Array.isArray(data.questions) || !data.questions.length) throw new Error("Invalid quiz");
+      const valid = data.questions.every(q => q && typeof q.text==="string" &&
+        Array.isArray(q.options) && q.options.length===4 &&
+        q.options.every(x=>typeof x==="string") &&
+        Number.isInteger(q.correct) && q.correct>=0 && q.correct<4);
+      if (!valid) throw new Error("Invalid question data");
+      questions = data.questions;
+      $("quizTitle").value = String(data.title||"Bộ câu hỏi").slice(0,90);
+      $("timeLimit").value = Math.min(180,Math.max(0,Number(data.timeLimit)||0));
+      saveLocal(); renderQuestionList();
+      // Visitor mode: people opening a shared quiz link can take the quiz
+      // without seeing the question editor or the sharing controls.
+      document.body.classList.add("visitor-mode");
+      const createTab = document.querySelector('.tab[data-tab="create"]');
+      const shareTab = document.querySelector('.tab[data-tab="share"]');
+      if (createTab) createTab.classList.add("hidden");
+      if (shareTab) shareTab.classList.add("hidden");
+      $("resetAllBtn").classList.add("hidden");
+      $("quizIntro").classList.remove("hidden");
+      $("quizPlay").classList.add("hidden");
+      $("quizFinished").classList.add("hidden");
+      $("introTitle").textContent = $("quizTitle").value || "Bài trắc nghiệm";
+      $("introInfo").textContent = `${questions.length} câu hỏi · ${Number($("timeLimit").value)||0 ? (Number($("timeLimit").value)+" phút") : "Không giới hạn thời gian"}`;
+      history.replaceState(null,"",location.pathname+location.search);
+      showTab("quiz");
+    } catch (e) {
+      alert("Đường dẫn chia sẻ không hợp lệ hoặc dữ liệu bị lỗi.");
+      history.replaceState(null,"",location.pathname+location.search);
+    }
+  }
+
+  document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => showTab(tab.dataset.tab)));
+  document.querySelectorAll("[data-goto]").forEach(btn => btn.addEventListener("click", () => showTab(btn.dataset.goto)));
+  $("saveQuestionBtn").addEventListener("click", saveQuestion);
+  $("questionImage").addEventListener("change", event => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn một tệp hình ảnh.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ảnh quá lớn. Vui lòng chọn ảnh có dung lượng dưới 2 MB.");
+      event.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      editorImage = String(reader.result || "");
+      $("imagePreview").src = editorImage;
+      $("imagePreviewWrap").classList.remove("hidden");
+    };
+    reader.onerror = () => alert("Không đọc được ảnh này. Hãy thử chọn ảnh khác.");
+    reader.readAsDataURL(file);
+  });
+  $("removeImageBtn").addEventListener("click", () => {
+    editorImage = "";
+    $("questionImage").value = "";
+    $("imagePreview").src = "";
+    $("imagePreviewWrap").classList.add("hidden");
+  });
+  $("cancelEditBtn").addEventListener("click", clearEditor);
+  $("clearEditorBtn").addEventListener("click", clearEditor);
+  $("startFromCreateBtn").addEventListener("click", () => { showTab("quiz"); updateIntro(); });
+  $("beginBtn").addEventListener("click", startQuiz);
+  $("nextBtn").addEventListener("click", nextQuestion);
+  $("quitBtn").addEventListener("click", () => { if (confirm("Bạn muốn kết thúc bài kiểm tra?")) finishQuiz(false); });
+  $("reviewBtn").addEventListener("click", () => showTab("results"));
+  $("retryBtn").addEventListener("click", startQuiz);
+  $("makeShareBtn").addEventListener("click", makeShare);
+  $("copyShareBtn").addEventListener("click", copyShare);
+  $("quizTitle").addEventListener("input", saveLocal);
+  $("timeLimit").addEventListener("change", saveLocal);
+  $("resetAllBtn").addEventListener("click", () => {
+    if (confirm("Xóa toàn bộ câu hỏi và dữ liệu đã lưu trên thiết bị?")) {
+      localStorage.removeItem(STORAGE_KEY); questions=[]; lastResult=null;
+      $("quizTitle").value=""; $("timeLimit").value=5; clearEditor();
+      saveLocal(); renderQuestionList(); renderResults(); showTab("create");
+    }
+  });
+
+  defaultOptions();
+  loadLocal();
+  importSharedQuiz();
+  if (!location.hash.startsWith("#quiz=")) showTab("quiz");
+})();
+</script>
+</body>
+</html>
